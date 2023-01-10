@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "fapi-edu"
+version = "0.1.0"
+description = ""
+authors = ["Oleksandr Chepurnyi <сhepurnyi_oo@groupbwt.com>"]
+readme = "README.md"
+packages = [{include = "fapi_edu"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = "^0.88.0"
+alembic = "^1.9.1"
+uvicorn = "^0.20.0"
+databases = {extras = ["aiomysql"], version = "^0.7.0"}
+python-dotenv = "^0.21.0"
+mysqlclient = "^2.1.1"
+python-multipart = "^0.0.5"
+fastapi-users = {extras = ["sqlalchemy"], version = "^10.2.1"}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
