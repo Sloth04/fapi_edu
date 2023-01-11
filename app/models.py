@@ -3,9 +3,9 @@ import sqlalchemy
 import datetime
 from sqlalchemy import Column
 from helpers.mixins import MysqlPrimaryKeyMixin, MysqlTimestampsMixin
-from sqlalchemy.dialects.mysql import BIGINT, VARCHAR, TEXT, DATE, TINYINT, BOOLEAN
-
-from .database import Base
+from sqlalchemy.dialects.mysql import BIGINT, VARCHAR, TEXT, DATE, TINYINT, BOOLEAN, ENUM
+from app.schemas import Role
+from app.database import Base
 
 
 class Book(Base, MysqlPrimaryKeyMixin, MysqlTimestampsMixin):
@@ -35,8 +35,10 @@ class Writer(Base, MysqlPrimaryKeyMixin, MysqlTimestampsMixin):
 class User(Base, MysqlPrimaryKeyMixin, MysqlTimestampsMixin):
     __tablename__ = "users"
 
-    username = Column("username", VARCHAR(255), nullable=False)
-    name = Column("name", VARCHAR(255), nullable=False)
-    lastname = Column("lastname", VARCHAR(255), nullable=False)
-    email = Column("email", VARCHAR(255), nullable=False)
-    is_active = Column("is_active", BOOLEAN(), nullable=False)
+    username = Column("username", VARCHAR(255), nullable=False, index=True)
+    email = Column("email", VARCHAR(255), nullable=False, index=True)
+    hashed_password = Column("hashed_password", VARCHAR(255), nullable=False)
+    full_name = Column("full_name", VARCHAR(255), nullable=True)
+    otp_secret = Column("otp_secret", VARCHAR(255), nullable=False)
+    disable = Column("disable", BOOLEAN(), nullable=False, default=False)
+    role = Column("role", ENUM(Role))
