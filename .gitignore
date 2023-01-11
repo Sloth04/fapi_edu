@@ -64,3 +64,6 @@ coverage.xml
 docker/.docker_env
 /.env
 /media/
+/app/media/*
+*.epub
+*.jpg

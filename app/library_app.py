@@ -4,15 +4,13 @@ import models
 import schemas
 import datetime
 import pathlib
+from database import SessionLocal
 from typing import Union, Optional, List
 from sqlalchemy.orm import Session
-from database import SessionLocal
 from fastapi import HTTPException, Depends, APIRouter, Form, BackgroundTasks, UploadFile, File
 from fastapi.responses import FileResponse
 
 library_router = APIRouter()
-
-cwd = pathlib.Path().cwd() / "library_app"
 
 
 # Dependency
@@ -22,6 +20,9 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+cwd = pathlib.Path().cwd() / "app"
 
 
 @library_router.get("/writer/{writer_id}/info", response_model=schemas.Writer, tags=[schemas.Tags.writers],
