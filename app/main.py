@@ -3,11 +3,10 @@ import crud
 import models
 import schemas
 import pyotp
-
 from datetime import datetime, timedelta
 from typing import Optional
-
-from database import engine, SessionLocal
+from sqladmin import Admin, ModelView
+from database import engine
 from sqlalchemy.orm import Session
 from fastapi import FastAPI, Depends, HTTPException, status, Body
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -21,8 +20,15 @@ from app.library_app import library_router, get_db
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
+admin = Admin(app, engine)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+class UserAdmin(ModelView, model=models.User):
+    column_list = [models.User.id, models.User.username, models.User.email, models.User.role, models.User.disable]
+
+
+admin.add_view(UserAdmin)
 
 
 @app.get("/")
