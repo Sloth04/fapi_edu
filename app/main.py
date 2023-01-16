@@ -3,21 +3,43 @@ import crud
 import models
 import schemas
 import pyotp
+import qrcode
+import base64
+import io
+import pathlib
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, List
 from sqladmin import Admin, ModelView
+
 from database import engine
 from sqlalchemy.orm import Session
-from fastapi import FastAPI, Depends, HTTPException, status, Body
+from pydantic import EmailStr
+from fastapi import FastAPI, Depends, HTTPException, status, Body, BackgroundTasks
+from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from jose import JWTError, jwt
 
-from settings import ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY
+from settings import *
 from security import pwd_context
 from app.library_app import library_router, get_db
 
+cwd = pathlib.Path().cwd()
 models.Base.metadata.create_all(bind=engine)
+
+conf = ConnectionConfig(
+    MAIL_USERNAME=MAIL_USERNAME,
+    MAIL_PASSWORD=MAIL_PASSWORD,
+    MAIL_FROM=MAIL_FROM,
+    MAIL_PORT=MAIL_PORT,
+    MAIL_SERVER=MAIL_SERVER,
+    MAIL_FROM_NAME=MAIL_FROM_NAME,
+    MAIL_STARTTLS=True,
+    MAIL_SSL_TLS=False,
+    USE_CREDENTIALS=True,
+    VALIDATE_CERTS=True,
+    TEMPLATE_FOLDER=Path(__file__).parent / 'templates' / 'email',
+)
 
 app = FastAPI()
 admin = Admin(app, engine)
@@ -107,9 +129,38 @@ def get_current_active_admin_user(
     return current_user
 
 
+def create_qr_code_img(uri_str: str, username: str):
+    qr = qrcode.QRCode(box_size=30)
+    qr.add_data(uri_str)
+    qr_code_img = qr.make_image()
+    buffered = io.BytesIO()
+
+    # current_datetime = datetime.now().strftime("%Y%m%d-%H%M%S")
+    # qr_filename = cwd / "media" / "qr_codes" / f'{username}_{current_datetime}.png'
+    # qr_code_img.save(qr_filename)
+
+    # .decode("utf-8") .decode("ascii")
+
+    qr_code_img.save(buffered, format="PNG")
+    img_encoded = base64.b64encode(buffered.getvalue()).decode("utf-8")
+    return img_encoded
+
+
+def send_email_background(background_tasks: BackgroundTasks, subject: str, email_to: EmailStr, body: dict):
+    message = MessageSchema(
+        subject=subject,
+        recipients=[email_to],
+        template_body=body,
+        subtype=MessageType.html)
+
+    fm = FastMail(conf)
+    background_tasks.add_task(
+        fm.send_message, message, template_name='new_user_email.html')
+
+
 @app.post("/token", response_model=schemas.Token)
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
-                           db: Session = Depends(get_db)):
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
+                                 db: Session = Depends(get_db)):
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -130,14 +181,14 @@ async def read_users_me(
 
 
 @app.put("/users/me/", response_model=schemas.User)
-def user_update_own_record(user_update: schemas.UserUpdate, db: Session = Depends(get_db),
-                           current_user: schemas.User = Depends(get_current_active_user)):
+async def user_update_own_record(user_update: schemas.UserUpdate, db: Session = Depends(get_db),
+                                 current_user: schemas.User = Depends(get_current_active_user)):
     db_user = crud.update_user_self(db, current_user, user_update)
     return db_user
 
 
 @app.get("/users/{user_id}", response_model=schemas.User)
-def get_user_by_id(
+async def get_user_by_id(
         user_id: int,
         db: Session = Depends(get_db),
         current_user: schemas.User = Depends(get_current_active_admin_user)):
@@ -148,7 +199,8 @@ def get_user_by_id(
 
 
 @app.post("/users/", response_model=schemas.User)
-def create_new_user(
+async def create_new_user(
+        background_tasks: BackgroundTasks,
         user: schemas.UserCreate = Body(
             example={
                 "username": "test_user",
@@ -156,11 +208,17 @@ def create_new_user(
                 "full_name": "Test User",
                 "password": "pass",
                 "role": "user",
-            }),
-        db: Session = Depends(get_db)):
+            }
+        ),
+        db: Session = Depends(get_db),
+):
     db_user = crud.create_user(db, user)
     db_user.qr_code_link = pyotp.totp.TOTP(db_user.otp_secret).provisioning_uri(
         name=db_user.email, issuer_name='Library App')
+    qr_code_img = create_qr_code_img(uri_str=db_user.qr_code_link, username=db_user.username)
+    send_email_background(background_tasks, 'Hello there!',
+                          db_user.email, body={'title': 'Hello dear user', 'name': db_user.full_name,
+                                               'qr_code_img': qr_code_img})
     return db_user
 
 

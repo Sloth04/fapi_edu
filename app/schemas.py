@@ -1,7 +1,11 @@
 import datetime
 from enum import Enum
-from typing import Optional, Union
-from pydantic import BaseModel
+from typing import Optional, Union, List
+from pydantic import BaseModel, EmailStr
+
+
+class EmailSchema(BaseModel):
+    email: List[EmailStr]
 
 
 class Token(BaseModel):
