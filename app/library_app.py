@@ -22,7 +22,7 @@ def get_db():
         db.close()
 
 
-cwd = pathlib.Path().cwd() / "app"
+cwd = pathlib.Path().cwd()
 
 
 @library_router.get("/writer/{writer_id}/info", response_model=schemas.Writer, tags=[schemas.Tags.writers],
@@ -43,15 +43,24 @@ def add_writer(writer: schemas.WriterCreate, db: Session = Depends(get_db)):
 
 
 @library_router.get("/book/{book_id}/info", response_model=schemas.Book, tags=[schemas.Tags.books])
-def get_book(book_id: int, get_book_file: bool = False, db: Session = Depends(get_db)):
+def get_book_info(book_id: int, db: Session = Depends(get_db)):
+    book = crud.get_book_by_id(db, book_id=book_id)
+    if book is None:
+        raise HTTPException(status_code=404, detail="Book not found")
+    else:
+        return book
+
+
+@library_router.get("/book/{book_id}/download", response_model=schemas.Book, tags=[schemas.Tags.books])
+def download_book_by_id(book_id: int, db: Session = Depends(get_db)):
     book = crud.get_book_by_id(db, book_id=book_id)
     if book is None:
         raise HTTPException(status_code=404, detail="Book not found")
     file = pathlib.Path(book.book_file)
-    if get_book_file and file.exists():
+    if file.exists():
         return FileResponse(file, filename=file.name)
     else:
-        return book
+        raise HTTPException(status_code=404, detail="Book file not found")
 
 
 @library_router.get("/books/", response_model=List[schemas.Book], tags=[schemas.Tags.books])
@@ -84,6 +93,7 @@ def add_book_form(background_tasks: BackgroundTasks,
                   publish_date: datetime.date = Form(default=datetime.date.today()),
                   rating: Optional[int] = Form(default=None),
                   cover_filename: Optional[str] = Form(default=None),
+                  book_filename: Optional[str] = Form(default=None),
                   genres: Optional[str] = Form(default=None),
                   cover_file: Optional[UploadFile] = File(default=None),
                   book_file: UploadFile = File(...),
@@ -92,7 +102,13 @@ def add_book_form(background_tasks: BackgroundTasks,
         cover_filename = cwd / "media" / "covers" / f"{cover_file.filename}"
         cover_file.filename = cover_filename
     else:
-        cover_file.filename = cwd / "media" / "covers" / f"{cover_filename}"
+        cover_file.filename = cwd / "media" / "covers" / f"{cover_filename}{pathlib.Path(cover_file.filename).suffix}"
+
+    if book_filename is None:
+        book_filename = cwd / "media" / "books" / f"{book_file.filename}"
+        book_file.filename = book_filename
+    else:
+        book_file.filename = cwd / "media" / "books" / f"{book_filename}{pathlib.Path(book_file.filename).suffix}"
 
     if cover_file.content_type == 'image/png' or cover_file.content_type == 'image/jpeg':
         background_tasks.add_task(crud.save_file, cover_file)

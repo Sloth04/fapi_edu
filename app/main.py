@@ -4,8 +4,6 @@ import models
 import schemas
 import pyotp
 import qrcode
-import base64
-import io
 import pathlib
 from datetime import datetime, timedelta
 from typing import Optional, List
@@ -130,28 +128,37 @@ def get_current_active_admin_user(
 
 
 def create_qr_code_img(uri_str: str, username: str):
-    qr = qrcode.QRCode(box_size=30)
+    qr = qrcode.QRCode(box_size=5)
     qr.add_data(uri_str)
     qr_code_img = qr.make_image()
-    buffered = io.BytesIO()
 
-    # current_datetime = datetime.now().strftime("%Y%m%d-%H%M%S")
-    # qr_filename = cwd / "media" / "qr_codes" / f'{username}_{current_datetime}.png'
-    # qr_code_img.save(qr_filename)
-
-    # .decode("utf-8") .decode("ascii")
-
-    qr_code_img.save(buffered, format="PNG")
-    img_encoded = base64.b64encode(buffered.getvalue()).decode("utf-8")
-    return img_encoded
+    current_datetime = datetime.now().strftime("%Y%m%d-%H%M%S")
+    qr_codes_path = cwd / "media" / "qr_codes"
+    qr_codes_path.mkdir(parents=True, exist_ok=True)
+    qr_filename = qr_codes_path / f'{username}_{current_datetime}.png'
+    qr_code_img.save(qr_filename)
+    return qr_filename
 
 
-def send_email_background(background_tasks: BackgroundTasks, subject: str, email_to: EmailStr, body: dict):
+def send_email_background_new_user(background_tasks: BackgroundTasks, subject: str, email_to: EmailStr, body: dict):
     message = MessageSchema(
         subject=subject,
         recipients=[email_to],
         template_body=body,
-        subtype=MessageType.html)
+        subtype=MessageType.html,
+        attachments=[
+            {
+                "file": "{filepath}".format(filepath=body['qr_code_img']),
+                "headers": {
+                    "Content-ID": "<qr_image@fastapi-mail>",
+                    "Content-Disposition": "inline; filename=\"{filename}\"".format(
+                        filename=body['qr_code_img'].name),  # For inline images only
+                },
+                "mime_type": "image",
+                "mime_subtype": "png",
+            }
+        ],
+    )
 
     fm = FastMail(conf)
     background_tasks.add_task(
@@ -216,9 +223,11 @@ async def create_new_user(
     db_user.qr_code_link = pyotp.totp.TOTP(db_user.otp_secret).provisioning_uri(
         name=db_user.email, issuer_name='Library App')
     qr_code_img = create_qr_code_img(uri_str=db_user.qr_code_link, username=db_user.username)
-    send_email_background(background_tasks, 'Hello there!',
-                          db_user.email, body={'title': 'Hello dear user', 'name': db_user.full_name,
-                                               'qr_code_img': qr_code_img})
+    send_email_background_new_user(background_tasks,
+                                   subject='Hello there!',
+                                   email_to=db_user.email,
+                                   body={'title': 'Hello dear user', 'name': db_user.full_name,
+                                         'qr_code_img': qr_code_img})
     return db_user
 
 

@@ -60,7 +60,7 @@ def add_book(db: Session, book: schemas.BookCreate):
 
 
 def save_file(file: UploadFile):
-    with open(f'{file.filename}', "wb") as buffer:
+    with open(f'{file.filename}', "w+b") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
 
