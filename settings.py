@@ -1,6 +1,9 @@
 import os
+import logging
 from dotenv import load_dotenv
 from pathlib import Path
+from pydantic import BaseModel
+from logging.config import dictConfig
 
 load_dotenv()
 
@@ -25,3 +28,36 @@ SECRET_KEY = os.getenv("SECRET_KEY", "")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 cwd = Path.cwd()
+
+
+class LogConfig(BaseModel):
+    """Logging configuration to be set for the server"""
+
+    LOGGER_NAME: str = "library_app"
+    LOG_FORMAT: str = "%(levelprefix)s | %(asctime)s | %(message)s"
+    LOG_LEVEL: str = "DEBUG"
+
+    # Logging config
+    version = 1
+    disable_existing_loggers = False
+    formatters = {
+        "default": {
+            "()": "uvicorn.logging.DefaultFormatter",
+            "fmt": LOG_FORMAT,
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    }
+    handlers = {
+        "default": {
+            "formatter": "default",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stderr",
+        },
+    }
+    loggers = {
+        LOGGER_NAME: {"handlers": ["default"], "level": LOG_LEVEL},
+    }
+
+
+dictConfig(LogConfig().dict())
+logger = logging.getLogger("library_app")

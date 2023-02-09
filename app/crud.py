@@ -1,6 +1,6 @@
 import shutil
-import models
-import schemas
+import app.models as models
+import app.schemas as schemas
 import pyotp
 from sqlalchemy.orm import Session
 from fastapi import UploadFile
@@ -104,4 +104,4 @@ def update_user_self(db: Session, current_user: schemas.User, user_update: schem
     db_user.hashed_password = pwd_context.hash(user_update.password)
     db.commit()
     db.refresh(db_user)
-    return
+    return db_user
