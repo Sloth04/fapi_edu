@@ -2,7 +2,7 @@ from typing import List
 
 from fastapi import HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
-from app.internal.users import allow_create_and_delete_resource
+from app.internal.roles import allow_create_and_delete_resource
 import app.crud as crud
 import app.dependencies as dependencies
 import app.schemas as schemas

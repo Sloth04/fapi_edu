@@ -9,7 +9,7 @@ import app.crud as crud
 import app.dependencies as dependencies
 import app.internal.users as int_users
 import app.schemas as schemas
-from app.internal.users import allow_create_and_delete_resource
+from app.internal.roles import allow_create_and_delete_resource
 
 from settings import *
 

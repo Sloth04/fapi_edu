@@ -2,6 +2,7 @@ import pathlib
 import uvicorn
 import app.models as models
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from sqladmin import Admin
@@ -11,7 +12,7 @@ from database import engine
 from middleware import TimerMiddleware
 from settings import logger
 
-origins = ["http://localshost:8080"]
+origins = ["http://localshost:8080", "http://localhost:3000"]
 
 cwd = pathlib.Path().cwd()
 models.Base.metadata.create_all(bind=engine)
@@ -21,6 +22,7 @@ application = FastAPI(debug=True)
 admin = Admin(application, engine)
 admin.add_view(UserAdmin)
 
+application.mount("/static", StaticFiles(directory="static"), name="static")
 application.include_router(users_router)
 application.include_router(books_router)
 application.include_router(writers_router)
