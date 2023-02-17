@@ -10,11 +10,11 @@ from jose import JWTError, jwt
 from pydantic import EmailStr
 from sqlalchemy.orm import Session
 
-import app.crud as crud
-import app.dependencies as dependencies
-import app.schemas as schemas
+import src.crud as crud
+import src.dependencies as dependencies
+import src.schemas as schemas
 from .email import send_email_background_task
-from app.security import pwd_context
+from src.security import pwd_context
 from settings import *
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

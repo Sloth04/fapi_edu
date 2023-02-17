@@ -63,6 +63,6 @@ coverage.xml
 
 docker/.docker_env
 /.env
-app/static/*
+src/static/*
 *.epub
 *.jpg

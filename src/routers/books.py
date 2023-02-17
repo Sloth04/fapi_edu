@@ -1,15 +1,15 @@
 import datetime
 import pathlib
-import app.crud as crud
-import app.models as models
-import app.dependencies as dependencies
-import app.schemas as schemas
+import src.crud as crud
+import src.models as models
+import src.dependencies as dependencies
+import src.schemas as schemas
 from typing import Optional, List
 from fastapi import HTTPException, Depends, APIRouter, Form, UploadFile, File, Request
 from sqlalchemy.orm import Session
 from starlette.background import BackgroundTasks
 from starlette.responses import FileResponse
-from app.internal.roles import allow_create_and_delete_resource
+from src.internal.roles import allow_create_and_delete_resource
 from settings import cwd
 
 books_router = APIRouter()

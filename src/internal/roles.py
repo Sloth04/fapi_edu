@@ -2,8 +2,8 @@ from typing import List
 
 from fastapi import HTTPException, Depends
 
-from app import schemas
-from app.internal import get_current_active_user
+from src import schemas
+from src.internal import get_current_active_user
 
 
 class RoleChecker:

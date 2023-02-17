@@ -1,13 +1,13 @@
 import pathlib
 import uvicorn
-import app.models as models
+import src.models as models
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from sqladmin import Admin
-from app.internal.admin import UserAdmin
-from app.routers import writers_router, books_router, users_router
+from src.internal.admin import UserAdmin
+from src.routers import writers_router, books_router, users_router
 from database import engine
 from middleware import TimerMiddleware
 from settings import logger
@@ -33,8 +33,8 @@ application.add_middleware(CORSMiddleware, allow_origins=origins)
 
 @application.get("/")
 def root():
-    return {"message": "Hello its your app"}
+    return {"message": "Hello its your main page"}
 
 
 if __name__ == "__main__":
-    uvicorn.run("app.main:application", host="127.0.0.1", port=8080, log_level="debug", reload=True)
+    uvicorn.run("src.main:application", host="127.0.0.1", port=8080, log_level="debug", reload=True)

@@ -5,11 +5,11 @@ from fastapi import Depends, HTTPException, status, Body, BackgroundTasks, APIRo
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-import app.crud as crud
-import app.dependencies as dependencies
-import app.internal.users as int_users
-import app.schemas as schemas
-from app.internal.roles import allow_create_and_delete_resource
+import src.crud as crud
+import src.dependencies as dependencies
+import src.internal.users as int_users
+import src.schemas as schemas
+from src.internal.roles import allow_create_and_delete_resource
 
 from settings import *
 

@@ -2,10 +2,10 @@ from typing import List
 
 from fastapi import HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
-from app.internal.roles import allow_create_and_delete_resource
-import app.crud as crud
-import app.dependencies as dependencies
-import app.schemas as schemas
+from src.internal.roles import allow_create_and_delete_resource
+import src.crud as crud
+import src.dependencies as dependencies
+import src.schemas as schemas
 
 writers_router = APIRouter()
 

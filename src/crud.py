@@ -1,6 +1,6 @@
 import shutil
-import app.models as models
-import app.schemas as schemas
+import src.models as models
+import src.schemas as schemas
 import pyotp
 from sqlalchemy.orm import Session
 from fastapi import UploadFile
