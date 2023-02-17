@@ -97,7 +97,7 @@ def create_qr_code_img(uri_str: str, username: str):
     qr_code_img = qr.make_image()
 
     current_datetime = datetime.now().strftime("%Y%m%d-%H%M%S")
-    qr_codes_path = cwd / "static" / "qr_codes"
+    qr_codes_path = cwd / "media_protected" / "qr_codes"
     qr_codes_path.mkdir(parents=True, exist_ok=True)
     qr_filename = qr_codes_path / f'{username}_{current_datetime}.png'
     qr_code_img.save(qr_filename)

@@ -100,7 +100,7 @@ class WriterBase(BaseModel):
     name: str
     lastname: str
     born: datetime.date
-    died: Optional[datetime.date]
+    died: Union[datetime.date, None] = None
 
     class Config:
         schema_extra = {
@@ -108,7 +108,7 @@ class WriterBase(BaseModel):
                 "name": "Fred",
                 "lastname": "The Writer",
                 "born": datetime.date.today(),
-                "died": datetime.date.today(),
+                "died": None,
             }
         }
 

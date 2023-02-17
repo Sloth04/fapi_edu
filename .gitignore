@@ -8,6 +8,9 @@ env.bak/
 venv.bak/
 
 *.log
+*.epub
+*.jpg
+*.pdf
 
 .vscode/
 .idea/
@@ -19,6 +22,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+src/media/*
+src/media_protected/*
 .Python
 build/
 develop-eggs/
@@ -63,6 +68,4 @@ coverage.xml
 
 docker/.docker_env
 /.env
-src/static/*
-*.epub
-*.jpg
+
