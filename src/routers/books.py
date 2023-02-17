@@ -1,16 +1,18 @@
 import datetime
 import pathlib
-import src.crud as crud
-import src.models as models
-import src.dependencies as dependencies
-import src.schemas as schemas
 from typing import Optional, List
+
 from fastapi import HTTPException, Depends, APIRouter, Form, UploadFile, File, Request
 from sqlalchemy.orm import Session
 from starlette.background import BackgroundTasks
 from starlette.responses import FileResponse
+
+import src.crud as crud
+import src.dependencies as dependencies
+import src.models as models
+import src.schemas as schemas
+from settings import *
 from src.internal.roles import allow_create_and_delete_resource
-from settings import cwd
 
 books_router = APIRouter()
 
@@ -41,9 +43,11 @@ async def get_books(request: Request,
                     params: schemas.PaginationQueryParams = Depends(),
                     db: Session = Depends(dependencies.get_db)):
     items = crud.get_books(db, skip=params.skip, limit=params.limit)
-    for index in range(len(items)):
-        cover_file = pathlib.Path(items[index].cover_file)
-        items[index].cover_file = request.url_for(f"{cover_file.name}", img=items[index].cover_file)
+    for item in items:
+        img_url = request.url_for('media', path=item.cover_file.replace('\\', '/'))
+        book_url = request.url_for('media', path=item.book_file.replace('\\', '/'))
+        item.cover_file = img_url
+        item.book_file = book_url
     return items
 
 
@@ -69,18 +73,19 @@ async def add_book_form(background_tasks: BackgroundTasks,
                         book_file: UploadFile = File(...),
                         db: Session = Depends(dependencies.get_db)):
     if cover_filename is None:
-        cover_filename = cwd / "static" / "covers" / f"{cover_file.filename}"
-        cover_file.filename = cover_filename
+        cover_filepath = cwd / "media" / "covers" / f"{cover_file.filename}"
+        cover_file.filename = cover_filepath
     else:
-        cover_file.filename = cwd / "static" / "covers" / f"{cover_filename}{pathlib.Path(cover_file.filename).suffix}"
+        cover_file.filename = cwd / "media" / "covers" / f"{cover_filename}{pathlib.Path(cover_file.filename).suffix}"
 
     if book_filename is None:
-        book_filename = cwd / "static" / "books" / f"{book_file.filename}"
-        book_file.filename = book_filename
+        book_filepath = cwd / "media" / "books" / f"{book_file.filename}"
+        book_file.filename = book_filepath
     else:
-        book_file.filename = cwd / "static" / "books" / f"{book_filename}{pathlib.Path(book_file.filename).suffix}"
+        book_file.filename = cwd / "media" / "books" / f"{book_filename}{pathlib.Path(book_file.filename).suffix}"
 
-    if cover_file.content_type == 'image/png' or cover_file.content_type == 'image/jpeg':
+    if cover_file.content_type == 'image/png' \
+            or cover_file.content_type == 'image/jpeg':
         background_tasks.add_task(crud.save_file, cover_file)
     else:
         raise HTTPException(status_code=418, detail="Unsupported format, must be .jpg or .png")
@@ -88,7 +93,7 @@ async def add_book_form(background_tasks: BackgroundTasks,
     if book_file.content_type == 'application/epub+zip' \
             or book_file.content_type == 'text/plain' \
             or book_file.content_type == 'application/pdf':
-        book_file.filename = cwd / "static" / "books" / f"{book_file.filename}"
+        book_file.filename = cwd / "media" / "books" / f"{book_file.filename}"
         background_tasks.add_task(crud.save_file, book_file)
     else:
         raise HTTPException(status_code=418, detail="Unsupported format, must be .epub / .txt / .pdf ")
@@ -96,13 +101,15 @@ async def add_book_form(background_tasks: BackgroundTasks,
     is_book_reg = crud.get_book_by_title(db, title=title)
     if is_book_reg:
         raise HTTPException(status_code=400, detail="Book already added")
+    cover_file_db_format_name = str(pathlib.Path(*cover_file.filename.parts[-2:]))
+    book_file_db_format_name = str(pathlib.Path(*book_file.filename.parts[-2:]))
     db_book = models.Book(title=title,
                           writer_id=writer_id,
                           description=description,
                           publish_date=publish_date,
                           rating=rating,
-                          cover_file=cover_file.filename,
-                          book_file=book_file.filename,
+                          cover_file=cover_file_db_format_name,
+                          book_file=book_file_db_format_name,
                           genres=genres)
     db.add(db_book)
     db.commit()
