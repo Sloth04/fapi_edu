@@ -85,11 +85,13 @@ async def add_book_form(background_tasks: BackgroundTasks,
     else:
         raise HTTPException(status_code=418, detail="Unsupported format, must be .jpg or .png")
 
-    if book_file.content_type == 'application/epub+zip' or book_file.content_type == 'text/plain':
+    if book_file.content_type == 'application/epub+zip' \
+            or book_file.content_type == 'text/plain' \
+            or book_file.content_type == 'application/pdf':
         book_file.filename = cwd / "static" / "books" / f"{book_file.filename}"
         background_tasks.add_task(crud.save_file, book_file)
     else:
-        raise HTTPException(status_code=418, detail="Unsupported format, must be .epub or .txt")
+        raise HTTPException(status_code=418, detail="Unsupported format, must be .epub / .txt / .pdf ")
 
     is_book_reg = crud.get_book_by_title(db, title=title)
     if is_book_reg:

@@ -1,7 +1,9 @@
 import datetime
 from enum import Enum
 from typing import Optional, Union, List
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
+
+password_regex = "[A-Za-z0-9@#$%^&+_=]{8,}"
 
 
 class EmailSchema(BaseModel):
@@ -36,12 +38,12 @@ class PaginationQueryParams:
 
 class UserBase(BaseModel):
     username: str
-    email: str = None
+    email: EmailStr
     full_name: Optional[str] = None
 
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(..., regex=password_regex)
     role: Role = Role.user
 
 

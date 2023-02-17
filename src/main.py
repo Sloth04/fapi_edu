@@ -23,18 +23,19 @@ admin = Admin(application, engine)
 admin.add_view(UserAdmin)
 
 application.mount("/static", StaticFiles(directory="static"), name="static")
-application.include_router(users_router)
-application.include_router(books_router)
-application.include_router(writers_router)
-
-application.add_middleware(TimerMiddleware)
-application.add_middleware(CORSMiddleware, allow_origins=origins)
 
 
 @application.get("/")
 def root():
     return {"message": "Hello its your main page"}
 
+
+application.include_router(users_router)
+application.include_router(books_router)
+application.include_router(writers_router)
+
+application.add_middleware(TimerMiddleware)
+application.add_middleware(CORSMiddleware, allow_origins=origins)
 
 if __name__ == "__main__":
     uvicorn.run("src.main:application", host="127.0.0.1", port=8080, log_level="debug", reload=True)
