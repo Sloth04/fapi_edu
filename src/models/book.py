@@ -13,7 +13,6 @@ class Book(Base, MysqlPrimaryKeyMixin, MysqlTimestampsMixin):
     __tablename__ = "books"
 
     title = Column("title", VARCHAR(255), nullable=False)
-    writer_id = Column("writer_id", BIGINT(unsigned=True), nullable=False)
     description = Column("description", TEXT(), nullable=True)
     publish_date = Column("publish_date", DATE(), default=datetime.date.today(),
                           server_default=sqlalchemy.text('(CURRENT_DATE())'))

@@ -10,5 +10,5 @@ from src.database import Base
 class Genre(Base, MysqlPrimaryKeyMixin, MysqlTimestampsMixin):
     __tablename__ = "genres"
 
-    name = Column("genre", VARCHAR(255), nullable=False, unique=True)
+    name = Column("name", VARCHAR(255), nullable=False, unique=True)
 

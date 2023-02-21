@@ -43,6 +43,10 @@ def get_book_by_title(db: Session, title: str):
     return db.query(models.Book).filter(models.Book.title == title).first()
 
 
+def get_genre_by_name(db: Session, name: str):
+    return db.query(models.Genre).filter(models.Genre.name == name).first()
+
+
 def add_writer(db: Session, writer: schemas.WriterCreate):
     db_writer = models.Writer(**writer.dict())
     db.add(db_writer)
@@ -105,3 +109,62 @@ def update_user_self(db: Session, current_user: schemas.User, user_update: schem
     db.commit()
     db.refresh(db_user)
     return db_user
+
+
+def insert_book_genres(db: Session, book_id: int, genres_ids: [int]):
+    values = [{'book_id': book_id, 'genre_id': genre_id} for genre_id in genres_ids]
+    stmt = models.BookGenre.__table__.insert().prefix_with('IGNORE').values(values)
+    db.execute(stmt)
+    db.commit()
+    return values
+
+
+def insert_book_writers(db: Session, book_id: int, writers_ids: [int]):
+    values = [{'book_id': book_id, 'writer_id': writer_id} for writer_id in writers_ids]
+    stmt = models.BookWriter.__table__.insert().prefix_with('IGNORE').values(values)
+    db.execute(stmt)
+    db.commit()
+    return values
+
+
+def add_book_with_entities(db: Session, db_book: models.Book, writers_str: str, genres_str: str):
+    db.add(db_book)
+    db.commit()
+    db.refresh(db_book)
+
+    writers_ids = []
+    genres_ids = []
+    writers_format_arr = []
+    genres_format_arr = []
+    writers = writers_str.split(',')
+    for writer in writers:
+        full_name = writer.split(' ')
+        full_name_format = [item.strip().capitalize() for item in full_name]
+        writers_format_arr.append(full_name_format)
+        writer_from_db = get_writer_by_name(db, full_name_format[0], full_name_format[1])
+        if not writer_from_db:
+            db_writer = models.Writer(name=full_name_format[0],
+                                      lastname=full_name_format[1])
+            db.add(db_writer)
+            db.commit()
+            db.refresh(db_writer)
+            writers_ids.append(db_writer.id)
+        else:
+            writers_ids.append(writer_from_db.id)
+    genres = genres_str.split(',')
+    for genre in genres:
+        genre_format = genre.strip().capitalize()
+        genres_format_arr.append(genre_format)
+        genre_from_db = get_genre_by_name(db, genre_format)
+        if not genre_from_db:
+            db_genre = models.Genre(name=genre_format)
+            db.add(db_genre)
+            db.commit()
+            db.refresh(db_genre)
+            genres_ids.append(db_genre.id)
+        else:
+            genres_ids.append(genre_from_db.id)
+    book_genres_id_combination = insert_book_genres(db, book_id=db_book.id, genres_ids=genres_ids)
+    book_writers_id_combination = insert_book_writers(db, book_id=db_book.id, writers_ids=writers_ids)
+
+    return db_book, writers_format_arr, genres_format_arr

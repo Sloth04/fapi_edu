@@ -20,7 +20,7 @@ def upgrade():
     op.drop_column('books', 'genres')
     op.create_table('genres',
                     sa.Column('id', mysql.BIGINT(unsigned=True), autoincrement=True, nullable=False),
-                    sa.Column('title', mysql.VARCHAR(length=255), nullable=False),
+                    sa.Column('name', mysql.VARCHAR(length=255), nullable=False),
                     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'),
                               nullable=False),
                     sa.Column('updated_at', mysql.TIMESTAMP(),

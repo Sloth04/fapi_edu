@@ -63,21 +63,21 @@ class User(UserBase):
 
 class BookBase(BaseModel):
     title: str
-    writer_id: str
+    writer: List[List[str]] = None
     description: Union[str, None] = None
     publish_date: datetime.date
     rating: int
-    genres: str
+    genres: List[str] = None
 
     class Config:
         schema_extra = {
             "example": {
                 "title": "Book",
-                "writer_id": 1,
+                "writer": ["Writer Name"],
                 "description": "Pretty Book",
                 "publish_date": datetime.date.today(),
                 "rating": 10,
-                "genres": "genre"
+                "genres": ["genre1", "genre2"]
             }
         }
 

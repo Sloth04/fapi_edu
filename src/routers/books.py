@@ -59,16 +59,18 @@ async def add_book_info(book: schemas.BookCreate, db: Session = Depends(dependen
     return crud.add_book(db=db, book=book)
 
 
+# TODO: add update_book_info
+
 @books_router.post("/book/add_form", response_model=schemas.Book, tags=[schemas.Tags.books])
 async def add_book_form(background_tasks: BackgroundTasks,
                         title: str = Form(...),
-                        writer_id: Optional[int] = Form(default=None),
+                        writers_str: Optional[str] = Form(default=None),
                         description: Optional[str] = Form(default=None),
                         publish_date: datetime.date = Form(default=datetime.date.today()),
                         rating: Optional[int] = Form(default=None),
                         cover_filename: Optional[str] = Form(default=None),
                         book_filename: Optional[str] = Form(default=None),
-                        genres: Optional[str] = Form(default=None),
+                        genres_str: Optional[str] = Form(default=None),
                         cover_file: Optional[UploadFile] = File(default=None),
                         book_file: UploadFile = File(...),
                         db: Session = Depends(dependencies.get_db)):
@@ -103,18 +105,22 @@ async def add_book_form(background_tasks: BackgroundTasks,
         raise HTTPException(status_code=400, detail="Book already added")
     cover_file_db_format_name = str(pathlib.Path(*cover_file.filename.parts[-2:]))
     book_file_db_format_name = str(pathlib.Path(*book_file.filename.parts[-2:]))
+
     db_book = models.Book(title=title,
-                          writer_id=writer_id,
                           description=description,
                           publish_date=publish_date,
                           rating=rating,
                           cover_file=cover_file_db_format_name,
-                          book_file=book_file_db_format_name,
-                          genres=genres)
-    db.add(db_book)
-    db.commit()
+                          book_file=book_file_db_format_name)
+
+    db_book, writers, genres = crud.add_book_with_entities(db=db, db_book=db_book,
+                                                           writers_str=writers_str,
+                                                           genres_str=genres_str)
     db.refresh(db_book)
-    return db_book
+    book = schemas.Book(**db_book.__dict__)
+    book.writer = writers
+    book.genres = genres
+    return book
 
 
 @books_router.delete("/book/{book_id}", dependencies=[Depends(allow_create_and_delete_resource)],
