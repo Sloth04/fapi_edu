@@ -20,4 +20,3 @@ class Book(Base, MysqlPrimaryKeyMixin, MysqlTimestampsMixin):
     rating = Column("rating", TINYINT(unsigned=True), nullable=True)
     cover_file = Column("cover_file", VARCHAR(255), nullable=True)
     book_file = Column("book_file", VARCHAR(255), nullable=True)
-    genres = Column("genres", TEXT(), nullable=True)

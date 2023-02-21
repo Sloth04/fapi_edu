@@ -21,6 +21,5 @@ def upgrade():
 
 
 def downgrade():
-    pass
     op.drop_index(op.f('ix_writers_name_lastname_born'), table_name='writers')
     op.drop_index(op.f('ix_books_title_writer_id'), table_name='books')

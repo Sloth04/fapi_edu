@@ -11,7 +11,10 @@ from src.routers import writers_router, books_router, users_router
 from database import engine
 from middleware import TimerMiddleware
 
-origins = ["http://localshost:8080", "http://localhost:3000"]
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+    "http://localhost:8080"]
 cwd = pathlib.Path().cwd()
 
 
@@ -23,7 +26,13 @@ def include_router(app):
 
 def include_middleware(app):
     app.add_middleware(TimerMiddleware)
-    app.add_middleware(CORSMiddleware, allow_origins=origins)
+    app.add_middleware(CORSMiddleware,
+                       allow_origins=origins,
+                       allow_credentials=True,
+                       allow_methods=["GET", "POST", "OPTIONS", "DELETE", "PATCH", "PUT"],
+                       allow_headers=["Content-Type", "Set-Cookie", "Access-Control-Allow-Headers",
+                                      "Access-Control-Allow-Origin",
+                                      "Authorization"])
 
 
 def configure_static(app):
@@ -36,6 +45,7 @@ def create_tables():
 
 def start_application():
     app = FastAPI(debug=True)
+    include_middleware(app)
     include_router(app)
     configure_static(app)
     create_tables()
