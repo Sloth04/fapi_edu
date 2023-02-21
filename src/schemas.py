@@ -63,7 +63,7 @@ class User(UserBase):
 
 class BookBase(BaseModel):
     title: str
-    writer: List[List[str]] = None
+    writer: List[str] = None
     description: Union[str, None] = None
     publish_date: datetime.date
     rating: int

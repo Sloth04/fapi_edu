@@ -1,9 +1,12 @@
 import shutil
+
+import pyotp
+from fastapi import UploadFile
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
 import src.models as models
 import src.schemas as schemas
-import pyotp
-from sqlalchemy.orm import Session
-from fastapi import UploadFile
 from security import pwd_context
 
 
@@ -25,8 +28,21 @@ def get_writer_by_name(db: Session, name: str, lastname: str):
     return db.query(models.Writer).filter(models.Writer.name == name, models.Writer.lastname == lastname).first()
 
 
-def get_books(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(models.Book).offset(skip).limit(limit).all()
+def get_books(db: Session, skip: int = 0, limit: int = 5):
+    return db.query(
+        models.Book,
+        func.concat(models.Writer.name, ' ', models.Writer.lastname),
+        func.group_concat(models.Genre.name.distinct())
+    ).select_from(models.Book) \
+        .join(models.BookGenre, models.Book.id == models.BookGenre.book_id) \
+        .join(models.BookWriter, models.Book.id == models.BookWriter.book_id) \
+        .join(models.Writer, models.BookWriter.writer_id == models.Writer.id) \
+        .join(models.Genre, models.BookGenre.genre_id == models.Genre.id) \
+        .group_by(models.Book.id,
+                  func.concat(models.Writer.name, ' ', models.Writer.lastname)) \
+        .offset(skip) \
+        .limit(limit) \
+        .all()
 
 
 def get_book_by_id(db: Session, book_id: int):

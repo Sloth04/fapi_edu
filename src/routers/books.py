@@ -42,13 +42,18 @@ async def download_book_by_id(book_id: int, db: Session = Depends(dependencies.g
 async def get_books(request: Request,
                     params: schemas.PaginationQueryParams = Depends(),
                     db: Session = Depends(dependencies.get_db)):
+    books = []
     items = crud.get_books(db, skip=params.skip, limit=params.limit)
     for item in items:
-        img_url = request.url_for('media', path=item.cover_file.replace('\\', '/'))
-        book_url = request.url_for('media', path=item.book_file.replace('\\', '/'))
-        item.cover_file = img_url
-        item.book_file = book_url
-    return items
+        book = schemas.Book(**item[0].__dict__)
+        book.writer = [item[1]]
+        book.genres = [item[2]]
+        img_url = request.url_for('media', path=book.cover_file.replace('\\', '/'))
+        book_url = request.url_for('media', path=book.book_file.replace('\\', '/'))
+        book.cover_file = img_url
+        book.book_file = book_url
+        books.append(book)
+    return books
 
 
 @books_router.post("/book/add_info", response_model=schemas.Book, tags=[schemas.Tags.books])
@@ -118,7 +123,7 @@ async def add_book_form(background_tasks: BackgroundTasks,
                                                            genres_str=genres_str)
     db.refresh(db_book)
     book = schemas.Book(**db_book.__dict__)
-    book.writer = writers
+    book.writer = [' '.join(x) for x in writers]
     book.genres = genres
     return book
 
