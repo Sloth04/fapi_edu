@@ -31,7 +31,7 @@ async def download_book_by_id(book_id: int, db: Session = Depends(dependencies.g
     book = crud.get_book_by_id(db, book_id=book_id)
     if book is None:
         raise HTTPException(status_code=404, detail="Book not found")
-    file = pathlib.Path(book.book_file)
+    file = cwd / 'media' / pathlib.Path(book.book_file)
     if file.exists():
         return FileResponse(file, filename=file.name)
     else:
