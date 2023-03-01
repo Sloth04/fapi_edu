@@ -45,6 +45,12 @@ def get_books(db: Session, skip: int = 0, limit: int = 5):
         .all()
 
 
+def get_genres(db: Session, skip: int = 0, limit: int = 5):
+    return db.query(
+        models.Genre,
+    ).offset(skip).limit(limit).all()
+
+
 def get_book_by_id(db: Session, book_id: int):
     return db.query(models.Book).filter(models.Book.id == book_id).first()
 

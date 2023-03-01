@@ -122,3 +122,13 @@ class Writer(WriterBase):
 
     class Config:
         orm_mode = True
+
+
+class GenreBase(BaseModel):
+    id: int
+    name: str
+
+
+class Genre(GenreBase):
+    class Config:
+        orm_mode = True

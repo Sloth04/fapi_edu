@@ -56,6 +56,13 @@ async def get_books(request: Request,
     return books
 
 
+@books_router.get("/genres/", response_model=List[schemas.Genre], tags=[schemas.Tags.books])
+async def get_genres(params: schemas.PaginationQueryParams = Depends(),
+                     db: Session = Depends(dependencies.get_db)):
+    items = crud.get_genres(db, skip=params.skip, limit=params.limit)
+    return items
+
+
 @books_router.post("/book/add_info", response_model=schemas.Book, tags=[schemas.Tags.books])
 async def add_book_info(book: schemas.BookCreate, db: Session = Depends(dependencies.get_db)):
     is_book_reg = crud.get_book_by_title(db, title=book.title)
